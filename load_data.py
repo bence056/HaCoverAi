@@ -1,13 +1,14 @@
 import datetime
+import pickle
 
-import influxdb_client, os, time
+import influxdb_client
 
 import const
-from person import query_person, PersonData
-from shutters import query_shutters, ShutterData
-from sun import query_sun, SunData
-from temperature import query_temps, TemperatureData
-from weather import query_weather, WeatherData
+from db.person import query_person, PersonData
+from db.shutters import query_shutters, ShutterData
+from db.sun import query_sun, SunData
+from db.temperature import query_temps, TemperatureData
+from db.weather import query_weather, WeatherData
 
 
 class DatasetEntry:
@@ -26,7 +27,7 @@ class DatasetEntry:
         self.person_data = None
 
 
-def query_influx() -> dict[datetime.datetime, DatasetEntry]:
+def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
 
     db_client = influxdb_client.InfluxDBClient(url=const.URL, token=const.INFLUXDB_TOKEN, org=const.ORG)
 
@@ -35,11 +36,11 @@ def query_influx() -> dict[datetime.datetime, DatasetEntry]:
     if connected:
         print(f"Version: {db_client.version()}")
 
-    shutter_tables = query_shutters(db_client)
-    temperature_tables = query_temps(db_client)
-    sun_tables = query_sun(db_client)
-    weather_tables = query_weather(db_client)
-    person_tables = query_person(db_client)
+    shutter_tables = query_shutters(db_client, start_date, end_date)
+    temperature_tables = query_temps(db_client, start_date, end_date)
+    sun_tables = query_sun(db_client, start_date, end_date)
+    weather_tables = query_weather(db_client, start_date, end_date)
+    person_tables = query_person(db_client, start_date, end_date)
 
 
     dataset_dict: dict[datetime.datetime, DatasetEntry] = {}
@@ -110,4 +111,6 @@ def query_influx() -> dict[datetime.datetime, DatasetEntry]:
             entry.person_data = PersonData(record["person.bence_varga_bence_varga"],record["person.csaba_varga_csaba_varga"])
 
     print("Data loaded")
+    with open('./data/training_data.pkl', 'wb') as out:
+        pickle.dump(dataset_dict, out, protocol=pickle.HIGHEST_PROTOCOL)
     return dataset_dict

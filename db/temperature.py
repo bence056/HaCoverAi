@@ -3,10 +3,10 @@ from influxdb_client import InfluxDBClient
 import const
 
 
-def query_temps(db_client: InfluxDBClient):
+def query_temps(db_client: InfluxDBClient, start_date, end_date):
     query_api = db_client.query_api()
     temp_query = f"""from(bucket: "homeassistant-prod")
-      |> range(start: {const.START_DATE})
+      |> range(start: {start_date.isoformat()}, stop: {end_date.isoformat()})
       |> filter(fn: (r)=>
   (
     r._measurement == "°C"

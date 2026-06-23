@@ -1,13 +1,15 @@
+import datetime
+
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.query_api import QueryOptions
 
 import const
 
 
-def query_shutters(db_client: InfluxDBClient):
+def query_shutters(db_client: InfluxDBClient, start_date, end_date):
     query_api = db_client.query_api()
     shutters_query = f"""from(bucket: "homeassistant-prod")
-      |> range(start: {const.START_DATE})
+      |> range(start: {start_date.isoformat()}, stop: {end_date.isoformat()})
       |> filter(fn: (r)=>
       (
         r._measurement =~ /cover/ and
