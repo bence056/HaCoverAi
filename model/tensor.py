@@ -2,7 +2,7 @@ import datetime
 
 import torch
 
-from load_data import DatasetEntry
+from db.load_data import DatasetEntry
 
 
 def parse_input_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]) -> torch.Tensor:

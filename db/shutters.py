@@ -3,7 +3,7 @@ import datetime
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.query_api import QueryOptions
 
-import const
+import util.const as const
 
 
 def query_shutters(db_client: InfluxDBClient, start_date, end_date):

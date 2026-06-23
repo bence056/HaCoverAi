@@ -1,0 +1,8 @@
+name: "HA Cover AI"
+description: "CoverAI addon for homeassistant"
+version: "1.0.0"
+slug: "cover_ai"
+init: false
+arch:
+  - aarch64
+  - amd64

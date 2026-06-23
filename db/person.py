@@ -1,6 +1,6 @@
 from influxdb_client import InfluxDBClient
 
-import const
+import util.const as const
 
 
 def query_person(db_client: InfluxDBClient, start_date, end_date):

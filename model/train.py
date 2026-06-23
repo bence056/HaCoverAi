@@ -2,7 +2,7 @@ from pathlib import Path
 
 import torch
 
-import const
+import util.const as const
 from model.module import CoverModel
 
 

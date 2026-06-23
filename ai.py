@@ -4,8 +4,8 @@ from pathlib import Path
 
 import torch
 
-import const
-from load_data import query_influx, DatasetEntry
+import util.const as const
+from db.load_data import query_influx, DatasetEntry
 from model.module import CoverModel
 from model.prod import CoverIntelligence
 from model.tensor import parse_input_tensor, parse_output_tensor

@@ -3,7 +3,7 @@ import pickle
 
 import influxdb_client
 
-import const
+import util.const as const
 from db.person import query_person, PersonData
 from db.shutters import query_shutters, ShutterData
 from db.sun import query_sun, SunData
