@@ -2,6 +2,16 @@ name: "HA Cover AI"
 description: "CoverAI addon for homeassistant"
 version: "1.0.0"
 slug: "cover_ai"
+
+
+options:
+  ha_token: ""
+  ha_url: "http://homeassistant.local:8123"
+
+schema:
+  ha_token: str
+  ha_url: str
+
 init: false
 arch:
   - aarch64

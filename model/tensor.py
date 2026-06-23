@@ -21,7 +21,7 @@ def parse_input_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]) -> tor
         vec.append(hour_float)
 
         for temperature in data.temperature_data.values():
-            vec.append(float(temperature.temperature) / 100.0)
+            vec.append(float(temperature.temperature))
 
         if data.sun_data:
             vec.append(data.sun_data.azimuth / 360.0)
