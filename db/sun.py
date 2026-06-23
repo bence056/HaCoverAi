@@ -24,11 +24,7 @@ def query_sun(db_client: InfluxDBClient, start_date, end_date):
 
  |> fill(usePrevious: true)
 
-|> filter(fn: (r)=>
-      (
-      exists r._value
-      )
-      )
+
 
 |> pivot(
       rowKey: ["_time"],

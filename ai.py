@@ -1,5 +1,5 @@
 import pickle
-from datetime import datetime
+from datetime import datetime,timezone
 from pathlib import Path
 
 import torch
@@ -33,6 +33,7 @@ elif '--train' in sys.argv:
         if '--end' in sys.argv:
             end_date = datetime.fromisoformat(sys.argv[sys.argv.index('--end') + 1])
 
+        end_date = min(end_date, datetime.now(tz=timezone.utc).replace(minute=0, second=0, microsecond=0))
         if start_date > end_date:
             raise Exception(f"Start date must be before end date!")
 
