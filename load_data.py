@@ -26,74 +26,88 @@ class DatasetEntry:
         self.person_data = None
 
 
-db_client = influxdb_client.InfluxDBClient(url=const.URL, token=const.INFLUXDB_TOKEN, org=const.ORG)
+def query_influx() -> dict[datetime.datetime, DatasetEntry]:
 
-connected = db_client.ping()
-print(f"Connected: {connected}")
-if connected:
-    print(f"Version: {db_client.version()}")
+    db_client = influxdb_client.InfluxDBClient(url=const.URL, token=const.INFLUXDB_TOKEN, org=const.ORG)
 
-shutter_tables = query_shutters(db_client)
-temperature_tables = query_temps(db_client)
-sun_tables = query_sun(db_client)
-weather_tables = query_weather(db_client)
-person_tables = query_person(db_client)
+    connected = db_client.ping()
+    print(f"Connected: {connected}")
+    if connected:
+        print(f"Version: {db_client.version()}")
+
+    shutter_tables = query_shutters(db_client)
+    temperature_tables = query_temps(db_client)
+    sun_tables = query_sun(db_client)
+    weather_tables = query_weather(db_client)
+    person_tables = query_person(db_client)
 
 
-dataset_dict: dict[datetime.datetime, DatasetEntry] = {}
+    dataset_dict: dict[datetime.datetime, DatasetEntry] = {}
 
-start_time: datetime.datetime = datetime.datetime.fromisoformat(const.START_DATE)
+    start_time: datetime.datetime = datetime.datetime.fromisoformat(const.START_DATE)
+    end_time: datetime.datetime = datetime.datetime.now(tz=datetime.timezone.utc)
 
-#find the first common timestamp across the entry set.
+    #find the first common timestamp across the entry set.
 
-for table_set in (shutter_tables, temperature_tables, sun_tables, weather_tables, person_tables):
-    test = max(
-        table.records[0].get_time()
-        for table in table_set
-        if table.records
-    )
-    if start_time is None:
-        start_time = test
-    elif test > start_time:
-        start_time = test
+    for table_set in (shutter_tables, temperature_tables, sun_tables, weather_tables, person_tables):
+        test = max(
+            table.records[0].get_time()
+            for table in table_set
+            if table.records
+        )
+        if start_time is None:
+            start_time = test
+        elif test > start_time:
+            start_time = test
 
-# Parse shutter dataset
-for table in shutter_tables:
-    for record in table.records:
+        test = min(
+            table.records[-1].get_time()
+            for table in table_set
+            if table.records
+        )
+        if end_time is None:
+            end_time = test
+        elif test < end_time:
+            end_time = test
 
-        if record.get_time() >= start_time:
+    # Parse shutter dataset
+    for table in shutter_tables:
+        for record in table.records:
+
+            if start_time <= record.get_time() < end_time:
+                entry = dataset_dict.setdefault(record.get_time(), DatasetEntry())
+                entry.shutter_data[record["entity_id"]] = ShutterData(record["entity_id"], record["friendly_name_str"],
+                                                                      record["current_position"], record["current_tilt_position"])
+
+
+    #parse temperature dataset
+    for table in temperature_tables:
+        for record in table.records:
+
+            if start_time <= record.get_time() < end_time:
+                entry = dataset_dict.setdefault(record.get_time(), DatasetEntry())
+                entry.temperature_data[record["entity_id"]] = TemperatureData(record["entity_id"], record["friendly_name_str"],
+                                                                      record["value"])
+
+    for record in sun_tables[0].records:
+
+        if start_time <= record.get_time() < end_time:
             entry = dataset_dict.setdefault(record.get_time(), DatasetEntry())
-            entry.shutter_data[record["entity_id"]] = ShutterData(record["entity_id"], record["friendly_name_str"],
-                                                                  record["current_position"], record["current_tilt_position"])
+            entry.sun_data = SunData(record["entity_id"], record["friendly_name_str"],
+                                                                      record["azimuth"], record["elevation"])
 
+    for record in weather_tables[0].records:
 
-#parse temperature dataset
-for table in temperature_tables:
-    for record in table.records:
-
-        if record.get_time() >= start_time:
+        if start_time <= record.get_time() < end_time:
             entry = dataset_dict.setdefault(record.get_time(), DatasetEntry())
-            entry.temperature_data[record["entity_id"]] = TemperatureData(record["entity_id"], record["friendly_name_str"],
-                                                                  record["value"])
+            entry.weather_data = WeatherData(record["entity_id"], record["friendly_name_str"],
+                                                                      record["temperature"], record["cloud_coverage"], record["state"])
 
-for record in sun_tables[0].records:
+    for record in person_tables[0].records:
 
-    if record.get_time() >= start_time:
-        entry = dataset_dict.setdefault(record.get_time(), DatasetEntry())
-        entry.sun_data = SunData(record["entity_id"], record["friendly_name_str"],
-                                                                  record["azimuth"], record["elevation"])
+        if start_time <= record.get_time() < end_time:
+            entry = dataset_dict.setdefault(record.get_time(), DatasetEntry())
+            entry.person_data = PersonData(record["person.bence_varga_bence_varga"],record["person.csaba_varga_csaba_varga"])
 
-for record in weather_tables[0].records:
-
-    if record.get_time() >= start_time:
-        entry = dataset_dict.setdefault(record.get_time(), DatasetEntry())
-        entry.weather_data = WeatherData(record["entity_id"], record["friendly_name_str"],
-                                                                  record["temperature"], record["cloud_coverage"], record["state"])
-
-for record in person_tables[0].records:
-
-    if record.get_time() >= start_time:
-        entry = dataset_dict.setdefault(record.get_time(), DatasetEntry())
-        entry.person_data = PersonData(record["person.bence_varga_bence_varga"],record["person.csaba_varga_csaba_varga"])
-
-print("done")
+    print("Data loaded")
+    return dataset_dict
