@@ -5,7 +5,7 @@ import torch
 from load_data import DatasetEntry
 
 
-def parse_input_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]):
+def parse_input_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]) -> torch.Tensor:
 
     batch = []
 
@@ -19,10 +19,6 @@ def parse_input_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]):
         vec.append(month_float)
         vec.append(day_of_year)
         vec.append(hour_float)
-
-        for shutter in data.shutter_data.values():
-            vec.append(float(shutter.position) / 100.0)
-            vec.append(float(shutter.tilt_position) / 100.0)
 
         for temperature in data.temperature_data.values():
             vec.append(float(temperature.temperature) / 100.0)
@@ -43,5 +39,19 @@ def parse_input_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]):
         batch.append(vec)
 
     tensor = torch.tensor(batch, dtype=torch.float32)
-    print(tensor)
-    print(tensor.shape)
+    return tensor
+
+
+def parse_output_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]) -> torch.Tensor:
+
+    batch = []
+    for time, data in in_dataset.items():
+        vec = []
+
+        for shutter in data.shutter_data.values():
+            vec.append(float(shutter.position) / 100.0)
+            vec.append(float(shutter.tilt_position) / 100.0)
+        batch.append(vec)
+
+    tensor = torch.tensor(batch, dtype=torch.float32)
+    return tensor
