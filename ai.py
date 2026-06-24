@@ -66,9 +66,9 @@ elif '--train' in sys.argv:
     y_true_test = output_tensor[split:]
 
     # Train the model
-    model = CoverModel(x_train.shape[1], y_true_train.shape[1])
+    data_schema = list(data_dict.values())[0]
+    model = CoverModel(x_train.shape[1], y_true_train.shape[1], data_schema)
     train_epochs(model, x_train, y_true_train, 5000)
-
 
     # Now test the train data.
     loss = test_model(x_test, y_true_test)
