@@ -23,6 +23,9 @@ class CoverIntelligence:
     HA_URL: str
     HA_TOKEN: str
     model: CoverModel
+    ws_event_string: str
+    pos_trigger_delta: int
+    tilt_trigger_delta: int
     ws_id: int
 
     def __init__(self):
@@ -30,6 +33,13 @@ class CoverIntelligence:
         self.HA_TOKEN = os.getenv("SUPERVISOR_TOKEN", "")
         self.HA_URL = "ws://supervisor/core/websocket"
         self.ws_id = 1
+        with open("/data/options.json") as f:
+            self.options = json.load(f)
+            self.ws_event_string = self.options["custom_trigger_event"]
+            if self.ws_event_string == "":
+                self.ws_event_string = const.WS_EVENT_HANDLE
+            self.pos_trigger_delta =  min(0, max(int(self.options["position_trigger_delta"]), 100))
+            self.tilt_trigger_delta =  min(0, max(int(self.options["tilt_trigger_delta"]), 100))
         self.model = load_cover_model(const.MODEL_SAVE_PATH)
         self.model.eval()
 
@@ -54,7 +64,7 @@ class CoverIntelligence:
                     await ws.send(json.dumps({
                         "id": self.ws_id,
                         "type": "subscribe_events",
-                        "event_type": const.WS_EVENT_HANDLE
+                        "event_type": self.ws_event_string
                     }))
                     self.ws_id += 1
                     result = json.loads(await ws.recv())
@@ -66,7 +76,7 @@ class CoverIntelligence:
                     while True:
                         event = json.loads(await ws.recv())
 
-                        if event.get("type") == "event" and event["event"]["event_type"] == const.WS_EVENT_HANDLE:
+                        if event.get("type") == "event" and event["event"]["event_type"] == self.ws_event_string:
                             states = await self.async_ws_poll_ai_input(ws)
                             self.fill_schema_from_states(states)
                             timestamp = event["event"]["time_fired"]

@@ -5,10 +5,14 @@ slug: "cover_ai"
 homeassistant_api: true
 
 options:
-  ha_token: ""
+  custom_trigger_event: "run_model_eval"
+  position_trigger_delta: 20
+  tilt_trigger_delta: 10
 
 schema:
-  ha_token: str
+  custom_trigger_event: str
+  position_trigger_delta: int
+  tilt_trigger_delta: int
 
 init: false
 arch:
