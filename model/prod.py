@@ -18,11 +18,13 @@ class CoverIntelligence:
     HA_URL: str
     HA_TOKEN: str
     model: CoverModel
+    ws_id: int
 
     def __init__(self):
         print("Initializing CoverIntelligence...")
         self.HA_TOKEN = os.getenv("SUPERVISOR_TOKEN", "")
         self.HA_URL = "ws://supervisor/core/websocket"
+        self.ws_id = 1
         self.model = load_cover_model(const.MODEL_SAVE_PATH)
         self.model.eval()
 
@@ -45,11 +47,11 @@ class CoverIntelligence:
 
                     # Sub to custom event
                     await ws.send(json.dumps({
-                        "id": 1,
+                        "id": self.ws_id,
                         "type": "subscribe_events",
                         "event_type": const.WS_EVENT_HANDLE
                     }))
-
+                    self.ws_id += 1
                     result = json.loads(await ws.recv())
 
                     if not result["success"]:
@@ -74,9 +76,10 @@ class CoverIntelligence:
 
     async def async_ws_poll_ai_input(self, ws):
         await ws.send(json.dumps({
-            "id": 2,
+            "id": self.ws_id,
             "type": "get_states"
         }))
+        self.ws_id += 1
 
         states = json.loads(await ws.recv())
         print(f"STATE RETURN: {states}")
