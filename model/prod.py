@@ -10,6 +10,7 @@ from util import const
 async def async_prod_main():
     print("async main event loop started.")
     ai = CoverIntelligence()
+    print(f"MODEL: {ai.model}")
     await ai.async_ws_connect()
 
 
