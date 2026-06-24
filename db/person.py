@@ -35,11 +35,16 @@ def query_person(db_client: InfluxDBClient, start_date, end_date):
 
 
 class PersonData:
-    person_states: dict[str, bool] = {}
-    home_count: int = 0
+
+    person_states: dict[str, bool]
+    home_count: int
+
+    def __init__(self):
+        self.person_states = {}
+        self.home_count = 0
 
     def update_states(self, key: str, value: bool):
         self.person_states[key] = value
-        home_count = 0
+        self.home_count = 0
         for value in self.person_states.values():
-            home_count += value
+            self.home_count += value

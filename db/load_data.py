@@ -25,7 +25,7 @@ class DatasetEntry:
         self.temperature_data = {}
         self.sun_data = None
         self.weather_data = None
-        self.person_data: PersonData = PersonData()
+        self.person_data = None
         self.data_validity = True
 
     def invalidate(self):
@@ -39,7 +39,8 @@ class DatasetEntry:
             ids.append(self.sun_data.entity_id)
         if self.weather_data:
             ids.append(self.weather_data.entity_id)
-        ids.extend(self.person_data.person_states.keys())
+        if self.person_data:
+            ids.extend(self.person_data.person_states.keys())
         return ids
 
 
@@ -72,7 +73,8 @@ def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
                 #invalidate entry
                 entry.invalidate()
             else:
-                entry.shutter_data[record["entity_id"]] = ShutterData(f"{record["domain"]}.{record["entity_id"]}", record["friendly_name_str"],
+                entity_id = f"{record["domain"]}.{record["entity_id"]}"
+                entry.shutter_data[entity_id] = ShutterData(entity_id, record["friendly_name_str"],
                                                                   record["current_position"], record["current_tilt_position"])
 
 
@@ -86,7 +88,8 @@ def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
                 #invalidate entry
                 entry.invalidate()
             else:
-                entry.temperature_data[record["entity_id"]] = TemperatureData(f"{record["domain"]}.{record["entity_id"]}", record["friendly_name_str"],
+                entity_id = f"{record["domain"]}.{record["entity_id"]}"
+                entry.temperature_data[entity_id] = TemperatureData(entity_id, record["friendly_name_str"],
                                                                   record["value"])
 
     for record in sun_tables[0].records:
@@ -121,7 +124,10 @@ def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
                 entry.invalidate()
             else:
                 is_home = record["_value"] == "home"
-                entry.person_data.update_states(f"{record["domain"]}.{record["entity_id"]}", is_home)
+                if entry.person_data is None:
+                    entry.person_data = PersonData()
+                if entry.person_data:
+                    entry.person_data.update_states(f"{record["domain"]}.{record["entity_id"]}", is_home)
 
     print(f"Data loaded - Entries: {len(dataset_dict)}")
     print("Filtering invalid data...")
@@ -134,6 +140,6 @@ def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
     print(f"Data filtered - Removed: {len(invalid_keys)} - Remaining: {len(dataset_dict)}")
     print(f"First timestamp: {list(dataset_dict.keys())[0]} - Last timestamp: {list(dataset_dict.keys())[-1]}")
 
-    with open('./data/training_data.pkl', 'wb') as out:
+    with open(const.TRAINING_SAVE_PATH, 'wb') as out:
         pickle.dump(dataset_dict, out, protocol=pickle.HIGHEST_PROTOCOL)
     return dataset_dict

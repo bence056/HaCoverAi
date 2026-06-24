@@ -22,7 +22,7 @@ elif '--train' in sys.argv:
     data_dict: dict[datetime, DatasetEntry] = {}
     input_tensor = torch.Tensor()
     output_tensor = torch.Tensor()
-    data_file = Path('./data/training_data.pkl')
+    data_file = Path(const.TRAINING_SAVE_PATH)
 
     if '--fresh' in sys.argv or not data_file.exists():
         print("Pulling fresh training data from InfluxDB")
