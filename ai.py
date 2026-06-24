@@ -1,3 +1,4 @@
+import asyncio
 import pickle
 from datetime import datetime,timezone
 from pathlib import Path
@@ -7,13 +8,13 @@ import torch
 import util.const as const
 from db.load_data import query_influx, DatasetEntry
 from model.module import CoverModel
-from model.prod import CoverIntelligence
+from model.prod import async_prod_main
 from model.tensor import parse_input_tensor, parse_output_tensor
 from model.train import train_epochs,test_model
 import sys
 
 if len(sys.argv) == 1 or sys.argv[1] == '--prod':
-    cover_ai = CoverIntelligence()
+    asyncio.run(async_prod_main())
 
 
 elif '--train' in sys.argv:

@@ -15,3 +15,5 @@ sympy==1.14.0
 torch==2.12.1
 typing_extensions==4.15.0
 urllib3==2.7.0
+
+websockets

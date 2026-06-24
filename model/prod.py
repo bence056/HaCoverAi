@@ -1,19 +1,19 @@
+import asyncio
 import json
+import os
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
+import websockets
+
+from util import const
 
 
-def sleep_until_next_hour():
-    now = datetime.now()
-
-    next_hour = (now.replace(minute=0, second=0, microsecond=0)
-                 + timedelta(hours=1))
-
-    delta = (next_hour - now).total_seconds()
-
-    time.sleep(delta)
+async def async_prod_main():
+    print("async main event loop started.")
+    ai = CoverIntelligence()
+    await ai.async_ws_connect()
 
 
 class CoverIntelligence:
@@ -23,13 +23,41 @@ class CoverIntelligence:
 
     def __init__(self):
         print("Initializing CoverIntelligence...")
-        file_path = Path("/data/options.json")
-        if file_path.exists():
-            with open("/data/options.json", "r") as f:
-                self.options = json.load(f)
-            self.HA_URL = self.options["ha_url"]
-            self.HA_TOKEN = self.options["ha_token"]
-            self.headers = {
-                "Authorization": f"Bearer {self.HA_TOKEN}",
-                "Content-Type": "application/json"
-            }
+        self.HA_TOKEN = os.getenv("SUPERVISOR_TOKEN", "")
+        self.HA_URL = "ws://supervisor/core/websocket"
+
+    async def async_ws_connect(self) -> None:
+        async with websockets.connect(self.HA_URL) as ws:
+            msg = json.loads(await ws.recv())
+            print(msg)
+            if msg["type"] == "auth_required":
+                print("Authenticating with websocket service...")
+                # Auth
+                await ws.send(json.dumps({
+                    "type": "auth",
+                    "access_token": self.HA_TOKEN,
+                }))
+
+                msg = json.loads(await ws.recv())
+
+                if msg["type"] != "auth_ok":
+                    raise RuntimeError("Authentication failed!")
+
+                # Sub to custom event
+                await ws.send(json.dumps({
+                    "id": 1,
+                    "type": "subscribe_events",
+                    "event_type": const.WS_EVENT_HANDLE
+                }))
+
+                result = json.loads(await ws.recv())
+
+                if not result["success"]:
+                    raise RuntimeError("Event subscription failed!")
+
+                # Event loop
+                while True:
+                    event = json.loads(await ws.recv())
+
+                    if event.get("type") == "event" and event["event"]["event_type"] == const.WS_EVENT_HANDLE:
+                        print(event)
