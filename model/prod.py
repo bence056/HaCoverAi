@@ -1,8 +1,11 @@
 import json
 import os
 from typing import Any
+
+import torch
 import websockets
 
+from model.module import CoverModel
 from util import const
 
 
@@ -16,11 +19,15 @@ class CoverIntelligence:
     options: Any
     HA_URL: str
     HA_TOKEN: str
+    model: CoverModel
 
     def __init__(self):
         print("Initializing CoverIntelligence...")
         self.HA_TOKEN = os.getenv("SUPERVISOR_TOKEN", "")
         self.HA_URL = "ws://supervisor/core/websocket"
+        prod_model = CoverModel(16, 17) #CHANGE THIS IMPORTANT!
+        prod_model.load_state_dict(torch.load('./data/model.pt'))
+        prod_model.eval()
 
     async def async_ws_connect(self) -> None:
         async with websockets.connect(self.HA_URL) as ws:
