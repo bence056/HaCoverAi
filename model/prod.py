@@ -1,9 +1,12 @@
+import datetime
 import json
 import os
 from typing import Any
 import websockets
 
+from db.load_data import DatasetEntry
 from model.module import CoverModel, load_cover_model
+from model.tensor import parse_input_tensor
 from util import const
 
 
@@ -62,8 +65,8 @@ class CoverIntelligence:
                         if event.get("type") == "event" and event["event"]["event_type"] == const.WS_EVENT_HANDLE:
                             states = await self.async_ws_poll_ai_input(ws)
                             self.fill_schema_from_states(states)
-                        else:
-                            print(f"OTHER: {event}")
+                            timestamp = event["event"]["time_fired"]
+                            self.evaluate_model(datetime.datetime.fromisoformat(timestamp))
 
 
         except (OSError, websockets.InvalidURI, websockets.InvalidHandshake) as ex:
@@ -105,9 +108,16 @@ class CoverIntelligence:
             self.model.data_schema.weather_data.temperature = entity_datas[weather_id]["attributes"]["temperature"]
             self.model.data_schema.weather_data.cloud_coverage = entity_datas[weather_id]["attributes"]["cloud_coverage"]
 
-        for entity_id in self.model.data_schema.person_data.person_states.keys():
-            is_home = entity_datas[entity_id]["state"] == "home"
-            self.model.data_schema.person_data.update_states(entity_id, is_home)
+        if self.model.data_schema.person_data:
+            for entity_id in self.model.data_schema.person_data.person_states.keys():
+                is_home = entity_datas[entity_id]["state"] == "home"
+                self.model.data_schema.person_data.update_states(entity_id, is_home)
 
-        print(self.model.data_schema)
 
+    def evaluate_model(self, time: datetime.datetime):
+        if self.model.data_schema:
+            adjusted = time.replace(tzinfo=datetime.timezone.utc, minute=0, second=0, microsecond=0)
+            tensor_parse: dict[datetime.datetime, DatasetEntry] = {adjusted: self.model.data_schema}
+            in_tensor = parse_input_tensor(tensor_parse)
+            print(f"From time: {adjusted}")
+            print(in_tensor)
