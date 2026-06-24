@@ -3,6 +3,7 @@ import datetime
 import torch
 
 from db.load_data import DatasetEntry
+from db.shutters import ShutterData
 
 
 def parse_input_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]) -> torch.Tensor:
@@ -59,3 +60,27 @@ def parse_output_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]) -> to
 
     tensor = torch.tensor(batch, dtype=torch.float32)
     return tensor
+
+def convert_from_prediction(prediction: torch.Tensor, data_schema: DatasetEntry) -> list[ShutterData]:
+    if prediction.size(dim=0) == len(data_schema.shutter_data):
+        print("Tensor and shutter size match!")
+
+    pred_shutters: list[ShutterData] = []
+    tensor_index = 0
+    for shutter in data_schema.shutter_data.values():
+        shutter_cpy = ShutterData(
+            shutter.entity_id,
+            shutter.name,
+            int(prediction[tensor_index].item() * 100),
+            int(prediction[tensor_index+1].item() * 100)
+        )
+        pred_shutters.append(shutter_cpy)
+        tensor_index += 2
+
+    print("Output shutter prediction:")
+    for s in pred_shutters:
+        print(f"id: {s.entity_id} - name: {s.name} --- pos: {s.position} - tilt: {s.tilt_position}")
+
+    return pred_shutters
+
+

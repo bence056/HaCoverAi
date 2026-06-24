@@ -8,7 +8,7 @@ import websockets
 
 from db.load_data import DatasetEntry
 from model.module import CoverModel, load_cover_model
-from model.tensor import parse_input_tensor
+from model.tensor import parse_input_tensor, convert_from_prediction
 from util import const
 
 
@@ -129,3 +129,4 @@ class CoverIntelligence:
             with torch.no_grad():
                 pred = self.model(in_tensor)
                 print(f"Model prediction: {pred}")
+                new_shutters = convert_from_prediction(pred, self.model.data_schema)
