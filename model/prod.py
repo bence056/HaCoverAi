@@ -43,6 +43,8 @@ class CoverIntelligence:
                 if msg["type"] != "auth_ok":
                     raise RuntimeError("Authentication failed!")
 
+                print("Token correct")
+
                 # Sub to custom event
                 await ws.send(json.dumps({
                     "id": 1,
@@ -54,6 +56,8 @@ class CoverIntelligence:
 
                 if not result["success"]:
                     raise RuntimeError("Event subscription failed!")
+
+                print("EventSub correct")
 
                 # Event loop
                 while True:
