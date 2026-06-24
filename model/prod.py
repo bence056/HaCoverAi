@@ -1,9 +1,5 @@
-import asyncio
 import json
 import os
-import time
-from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Any
 import websockets
 
@@ -43,8 +39,6 @@ class CoverIntelligence:
                 if msg["type"] != "auth_ok":
                     raise RuntimeError("Authentication failed!")
 
-                print("Token correct")
-
                 # Sub to custom event
                 await ws.send(json.dumps({
                     "id": 1,
@@ -57,11 +51,19 @@ class CoverIntelligence:
                 if not result["success"]:
                     raise RuntimeError("Event subscription failed!")
 
-                print("EventSub correct")
-
                 # Event loop
                 while True:
                     event = json.loads(await ws.recv())
 
                     if event.get("type") == "event" and event["event"]["event_type"] == const.WS_EVENT_HANDLE:
                         print(event)
+                        await self.async_ws_poll_ai_input(ws)
+
+    async def async_ws_poll_ai_input(self, ws):
+        await ws.send(json.dumps({
+            "id": 2,
+            "type": "get_states"
+        }))
+
+        states = json.loads(await ws.recv())
+        print(states)
