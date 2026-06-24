@@ -61,6 +61,9 @@ class CoverIntelligence:
 
                         if event.get("type") == "event" and event["event"]["event_type"] == const.WS_EVENT_HANDLE:
                             states = await self.async_ws_poll_ai_input(ws)
+                            self.fill_schema_from_states(states)
+                        else:
+                            print(f"OTHER: {event}")
 
 
         except (OSError, websockets.InvalidURI, websockets.InvalidHandshake) as ex:
