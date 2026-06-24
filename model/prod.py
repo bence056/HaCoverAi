@@ -2,6 +2,8 @@ import datetime
 import json
 import os
 from typing import Any
+
+import torch
 import websockets
 
 from db.load_data import DatasetEntry
@@ -124,3 +126,6 @@ class CoverIntelligence:
             in_tensor = parse_input_tensor(tensor_parse)
             print(f"From time: {adjusted}")
             print(in_tensor)
+            with torch.no_grad():
+                pred = self.model(in_tensor)
+                print(f"Model prediction: {pred}")
