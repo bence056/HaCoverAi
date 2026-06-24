@@ -31,6 +31,17 @@ class DatasetEntry:
     def invalidate(self):
         self.data_validity = False
 
+    def get_entity_id_list(self) -> list[str]:
+        ids: list[str] = []
+        ids.extend(self.shutter_data.keys())
+        ids.extend(self.temperature_data.keys())
+        if self.sun_data:
+            ids.append(self.sun_data.device_id)
+        if self.weather_data:
+            ids.append(self.weather_data.device_id)
+        ids.extend(self.person_data.person_states.keys())
+        return ids
+
 
 def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
 

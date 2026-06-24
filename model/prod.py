@@ -62,7 +62,8 @@ class CoverIntelligence:
 
                         if event.get("type") == "event" and event["event"]["event_type"] == const.WS_EVENT_HANDLE:
                             print(event)
-                            await self.async_ws_poll_ai_input(ws)
+                            states = await self.async_ws_poll_ai_input(ws)
+
 
         except (OSError, websockets.InvalidURI, websockets.InvalidHandshake) as ex:
             print(f"Failed to connect to websocket: {ex}")
@@ -75,4 +76,37 @@ class CoverIntelligence:
         }))
 
         states = json.loads(await ws.recv())
-        print(states)
+        return states.result
+
+
+    def fill_schema_from_states(self, states):
+        entity_ids = self.model.data_schema.get_entity_id_list()
+        entity_datas: dict[str, dict] = {}
+        for state in states:
+            if state["entity_id"] in entity_ids:
+                entity_datas[state["entity_id"]] = state
+
+        #Load the data into the object
+        for entity_id,shutter in self.model.data_schema.shutter_data.items():
+            shutter.position = entity_datas[entity_id]["attributes"]["current_position"]
+            shutter.tilt_position = entity_datas[entity_id]["attributes"]["current_tilt_position"]
+        for entity_id,temperature in self.model.data_schema.temperature_data.items():
+            temperature.temperature = entity_datas[entity_id]["state"]
+
+        if self.model.data_schema.sun_data:
+            sun_id = self.model.data_schema.sun_data.device_id
+            self.model.data_schema.sun_data.azimuth = entity_datas[sun_id]["attributes"]["azimuth"]
+            self.model.data_schema.sun_data.azimuth = entity_datas[sun_id]["attributes"]["elevation"]
+
+        if self.model.data_schema.weather_data:
+            weather_id = self.model.data_schema.weather_data.device_id
+            self.model.data_schema.weather_data.state_string = entity_datas[weather_id]["state"]
+            self.model.data_schema.weather_data.temperature = entity_datas[weather_id]["attributes"]["temperature"]
+            self.model.data_schema.weather_data.cloud_coverage = entity_datas[weather_id]["attributes"]["cloud_coverage"]
+
+        for entity_id in self.model.data_schema.person_data.person_states.keys():
+            is_home = entity_datas[entity_id]["state"] == "home"
+            self.model.data_schema.person_data.update_states(entity_id, is_home)
+
+        print(self.model.data_schema)
+

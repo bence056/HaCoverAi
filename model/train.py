@@ -23,12 +23,12 @@ def train_epochs(model: CoverModel, x: torch.Tensor, y_true: torch.Tensor, epoch
         if epoch % 10 == 0:
             print(f"Epoch: {epoch:02d}, Loss: {loss.item():.4f}")
 
-    model.save_cover_model("./data/model.pt")
+    model.save_cover_model(const.MODEL_SAVE_PATH)
 
 
 def test_model(x_test: torch.Tensor, y_true_test: torch.Tensor) -> float:
 
-    file = Path("./data/model.pt")
+    file = Path(const.MODEL_SAVE_PATH)
     if not file.exists():
         raise FileNotFoundError(f"File {file} not found. Did you forget to train the model?")
 

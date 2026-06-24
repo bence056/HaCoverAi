@@ -1,6 +1,11 @@
 import torch
 
 from db.load_data import DatasetEntry
+from db.person import PersonData
+from db.shutters import ShutterData
+from db.sun import SunData
+from db.temperature import TemperatureData
+from db.weather import WeatherData
 
 
 def make_layers(in_features: int, out_features: int) -> torch.nn.Module:
@@ -14,6 +19,7 @@ def make_layers(in_features: int, out_features: int) -> torch.nn.Module:
 
 
 def load_cover_model(path: str) -> CoverModel:
+    torch.serialization.add_safe_globals([DatasetEntry, ShutterData, TemperatureData, SunData, WeatherData, PersonData])
     save_data = torch.load(path)
     model = CoverModel(save_data["in_features"], save_data["out_features"], save_data["data_schema"])
     model.load_state_dict(save_data["state_dict"])
