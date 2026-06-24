@@ -30,7 +30,6 @@ class CoverIntelligence:
         try:
             async with websockets.connect(self.HA_URL) as ws:
                 msg = json.loads(await ws.recv())
-                print(msg)
                 if msg["type"] == "auth_required":
                     print("Authenticating with websocket service...")
                     # Auth
@@ -61,7 +60,6 @@ class CoverIntelligence:
                         event = json.loads(await ws.recv())
 
                         if event.get("type") == "event" and event["event"]["event_type"] == const.WS_EVENT_HANDLE:
-                            print(event)
                             states = await self.async_ws_poll_ai_input(ws)
 
 
@@ -76,7 +74,7 @@ class CoverIntelligence:
         }))
 
         states = json.loads(await ws.recv())
-        return states.result
+        return states["result"]
 
 
     def fill_schema_from_states(self, states):
