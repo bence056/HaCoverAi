@@ -10,7 +10,6 @@ from util import const
 async def async_prod_main():
     print("async main event loop started.")
     ai = CoverIntelligence()
-    print(f"MODEL: {ai.model}")
     await ai.async_ws_connect()
 
 
@@ -24,8 +23,8 @@ class CoverIntelligence:
         print("Initializing CoverIntelligence...")
         self.HA_TOKEN = os.getenv("SUPERVISOR_TOKEN", "")
         self.HA_URL = "ws://supervisor/core/websocket"
-        model = load_cover_model(const.MODEL_SAVE_PATH)
-        model.eval()
+        self.model = load_cover_model(const.MODEL_SAVE_PATH)
+        self.model.eval()
 
     async def async_ws_connect(self) -> None:
         try:
