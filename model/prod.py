@@ -23,8 +23,8 @@ class CoverIntelligence:
         print("Initializing CoverIntelligence...")
         self.HA_TOKEN = os.getenv("SUPERVISOR_TOKEN", "")
         self.HA_URL = "ws://supervisor/core/websocket"
-        prod_model = load_cover_model(const.MODEL_SAVE_PATH)
-        prod_model.eval()
+        model = load_cover_model(const.MODEL_SAVE_PATH)
+        model.eval()
 
     async def async_ws_connect(self) -> None:
         try:
