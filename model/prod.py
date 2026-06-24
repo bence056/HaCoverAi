@@ -79,6 +79,7 @@ class CoverIntelligence:
         }))
 
         states = json.loads(await ws.recv())
+        print(f"STATE RETURN: {states}")
         return states["result"]
 
 
