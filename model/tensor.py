@@ -32,9 +32,13 @@ def parse_input_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]) -> tor
             vec.append(data.weather_data.cloud_coverage)
 
         if data.person_data:
-            vec.append(float(1) if data.person_data.ben_home else 0)
-            vec.append(float(1) if data.person_data.csaba_home else 0)
-            vec.append(float(data.person_data.home_count / 2.0))
+            for state in data.person_data.person_states.values():
+                vec.append(float(1) if state else 0)
+            dict_len = len(data.person_data.person_states)
+            if dict_len > 0:
+                vec.append(float(data.person_data.home_count / len(data.person_data.person_states)))
+            else:
+                vec.append(0)
 
         batch.append(vec)
 

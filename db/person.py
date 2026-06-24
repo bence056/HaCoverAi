@@ -29,25 +29,17 @@ def query_person(db_client: InfluxDBClient, start_date, end_date):
  |> fill(usePrevious: true)
 
 
-
-|> pivot(
-      rowKey: ["_time"],
-      columnKey: ["_measurement", "entity_id"],
-      valueColumn: "_value"
-  )
     """
     tables = query_api.query(person_query, org=const.ORG)
     return tables
 
 
 class PersonData:
-    device_id: str
-    name: str
-    ben_home: bool
-    csaba_home: bool
-    home_count: int
+    person_states: dict[str, bool] = {}
+    home_count: int = 0
 
-    def __init__(self, ben_home: str, csaba_home: str):
-        self.ben_home = ben_home == "home"
-        self.csaba_home = csaba_home == "home"
-        self.home_count = self.ben_home + self.csaba_home
+    def update_states(self, key: str, value: bool):
+        self.person_states[key] = value
+        home_count = 0
+        for value in self.person_states.values():
+            home_count += value

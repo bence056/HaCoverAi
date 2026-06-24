@@ -25,7 +25,7 @@ class DatasetEntry:
         self.temperature_data = {}
         self.sun_data = None
         self.weather_data = None
-        self.person_data = None
+        self.person_data: PersonData = PersonData()
         self.data_validity = True
 
     def invalidate(self):
@@ -100,16 +100,17 @@ def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
         else:
           entry.weather_data = WeatherData(record["entity_id"], record["friendly_name_str"],
                                                                   record["temperature"], record["cloud_coverage"], record["state"])
+    for table in person_tables:
+        for record in table.records:
 
-    for record in person_tables[0].records:
 
-
-        entry = dataset_dict.setdefault(record.get_time(), DatasetEntry())
-        if record["person.bence_varga_bence_varga"] is None or record["person.csaba_varga_csaba_varga"] is None:
-            # invalidate entry
-            entry.invalidate()
-        else:
-            entry.person_data = PersonData(record["person.bence_varga_bence_varga"],record["person.csaba_varga_csaba_varga"])
+            entry = dataset_dict.setdefault(record.get_time(), DatasetEntry())
+            if record["_value"] is None:
+                # invalidate entry
+                entry.invalidate()
+            else:
+                is_home = record["_value"] == "home"
+                entry.person_data.update_states(record["entity_id"], is_home)
 
     print(f"Data loaded - Entries: {len(dataset_dict)}")
     print("Filtering invalid data...")
