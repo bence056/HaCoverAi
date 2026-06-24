@@ -55,11 +55,11 @@ def query_temps(db_client: InfluxDBClient, start_date, end_date):
     return tables
 
 class TemperatureData:
-    device_id: str
+    entity_id: str
     name: str
     temperature: float
 
-    def __init__(self, device_id: str, name: str, temperature: float):
-        self.device_id = device_id
+    def __init__(self, entity_id: str, name: str, temperature: float):
+        self.entity_id = entity_id
         self.name = name
         self.temperature = temperature

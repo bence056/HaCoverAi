@@ -52,13 +52,13 @@ def query_shutters(db_client: InfluxDBClient, start_date, end_date):
 
 
 class ShutterData:
-    device_id: str
+    entity_id: str
     name: str
     position: int
     tilt_position: int
 
-    def __init__(self, device_id, name, position, tilt_position):
-        self.device_id = device_id
+    def __init__(self, entity_id, name, position, tilt_position):
+        self.entity_id = entity_id
         self.name = name
         self.position = position
         self.tilt_position = tilt_position

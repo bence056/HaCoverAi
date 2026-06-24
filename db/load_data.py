@@ -36,9 +36,9 @@ class DatasetEntry:
         ids.extend(self.shutter_data.keys())
         ids.extend(self.temperature_data.keys())
         if self.sun_data:
-            ids.append(self.sun_data.device_id)
+            ids.append(self.sun_data.entity_id)
         if self.weather_data:
-            ids.append(self.weather_data.device_id)
+            ids.append(self.weather_data.entity_id)
         ids.extend(self.person_data.person_states.keys())
         return ids
 
@@ -72,7 +72,7 @@ def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
                 #invalidate entry
                 entry.invalidate()
             else:
-                entry.shutter_data[record["entity_id"]] = ShutterData(record["entity_id"], record["friendly_name_str"],
+                entry.shutter_data[record["entity_id"]] = ShutterData(f"{record["domain"]}.{record["entity_id"]}", record["friendly_name_str"],
                                                                   record["current_position"], record["current_tilt_position"])
 
 
@@ -86,7 +86,7 @@ def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
                 #invalidate entry
                 entry.invalidate()
             else:
-                entry.temperature_data[record["entity_id"]] = TemperatureData(record["entity_id"], record["friendly_name_str"],
+                entry.temperature_data[record["entity_id"]] = TemperatureData(f"{record["domain"]}.{record["entity_id"]}", record["friendly_name_str"],
                                                                   record["value"])
 
     for record in sun_tables[0].records:
@@ -97,7 +97,7 @@ def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
             # invalidate entry
             entry.invalidate()
         else:
-            entry.sun_data = SunData(record["entity_id"], record["friendly_name_str"],
+            entry.sun_data = SunData(f"{record["domain"]}.{record["entity_id"]}", record["friendly_name_str"],
                                                                   record["azimuth"], record["elevation"])
 
     for record in weather_tables[0].records:
@@ -109,7 +109,7 @@ def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
             # invalidate entry
             entry.invalidate()
         else:
-          entry.weather_data = WeatherData(record["entity_id"], record["friendly_name_str"],
+          entry.weather_data = WeatherData(f"{record["domain"]}.{record["entity_id"]}", record["friendly_name_str"],
                                                                   record["temperature"], record["cloud_coverage"], record["state"])
     for table in person_tables:
         for record in table.records:
@@ -121,7 +121,7 @@ def query_influx(start_date, end_date) -> dict[datetime.datetime, DatasetEntry]:
                 entry.invalidate()
             else:
                 is_home = record["_value"] == "home"
-                entry.person_data.update_states(record["entity_id"], is_home)
+                entry.person_data.update_states(f"{record["domain"]}.{record["entity_id"]}", is_home)
 
     print(f"Data loaded - Entries: {len(dataset_dict)}")
     print("Filtering invalid data...")

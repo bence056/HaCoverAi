@@ -35,14 +35,14 @@ def query_weather(db_client: InfluxDBClient, start_date, end_date):
     return tables
 
 class WeatherData:
-    device_id: str
+    entity_id: str
     name: str
     temperature: float
     cloud_coverage: float
     state_string: str
 
-    def __init__(self, device_id: str, name: str, temperature: float, cloud_coverage: float, state_string: str):
-        self.device_id = device_id
+    def __init__(self, entity_id: str, name: str, temperature: float, cloud_coverage: float, state_string: str):
+        self.entity_id = entity_id
         self.name = name
         self.temperature = temperature
         self.cloud_coverage = cloud_coverage

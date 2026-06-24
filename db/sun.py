@@ -37,13 +37,13 @@ def query_sun(db_client: InfluxDBClient, start_date, end_date):
 
 
 class SunData:
-    device_id: str
+    entity_id: str
     name: str
     azimuth: float
     elevation: float
 
-    def __init__(self, device_id: str, name: str, azimuth: float, elevation: float):
-        self.device_id = device_id
+    def __init__(self, entity_id: str, name: str, azimuth: float, elevation: float):
+        self.entity_id = entity_id
         self.name = name
         self.azimuth = azimuth
         self.elevation = elevation

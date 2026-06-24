@@ -95,12 +95,12 @@ class CoverIntelligence:
             temperature.temperature = entity_datas[entity_id]["state"]
 
         if self.model.data_schema.sun_data:
-            sun_id = self.model.data_schema.sun_data.device_id
+            sun_id = self.model.data_schema.sun_data.entity_id
             self.model.data_schema.sun_data.azimuth = entity_datas[sun_id]["attributes"]["azimuth"]
             self.model.data_schema.sun_data.azimuth = entity_datas[sun_id]["attributes"]["elevation"]
 
         if self.model.data_schema.weather_data:
-            weather_id = self.model.data_schema.weather_data.device_id
+            weather_id = self.model.data_schema.weather_data.entity_id
             self.model.data_schema.weather_data.state_string = entity_datas[weather_id]["state"]
             self.model.data_schema.weather_data.temperature = entity_datas[weather_id]["attributes"]["temperature"]
             self.model.data_schema.weather_data.cloud_coverage = entity_datas[weather_id]["attributes"]["cloud_coverage"]
