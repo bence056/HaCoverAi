@@ -130,3 +130,4 @@ class CoverIntelligence:
                 pred = self.model(in_tensor)
                 print(f"Model prediction: {pred}")
                 new_shutters = convert_from_prediction(pred, self.model.data_schema)
+                #data is ready to send back to set value. First check if deltas are big enough to be a significant change.
