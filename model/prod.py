@@ -1,11 +1,9 @@
 import json
 import os
 from typing import Any
-
-import torch
 import websockets
 
-from model.module import CoverModel
+from model.module import CoverModel, load_cover_model
 from util import const
 
 
@@ -25,46 +23,50 @@ class CoverIntelligence:
         print("Initializing CoverIntelligence...")
         self.HA_TOKEN = os.getenv("SUPERVISOR_TOKEN", "")
         self.HA_URL = "ws://supervisor/core/websocket"
-        prod_model = CoverModel(16, 17) #CHANGE THIS IMPORTANT!
-        prod_model.load_state_dict(torch.load('./data/model.pt'))
+        prod_model = load_cover_model(const.MODEL_SAVE_PATH)
         prod_model.eval()
 
     async def async_ws_connect(self) -> None:
-        async with websockets.connect(self.HA_URL) as ws:
-            msg = json.loads(await ws.recv())
-            print(msg)
-            if msg["type"] == "auth_required":
-                print("Authenticating with websocket service...")
-                # Auth
-                await ws.send(json.dumps({
-                    "type": "auth",
-                    "access_token": self.HA_TOKEN,
-                }))
-
+        try:
+            async with websockets.connect(self.HA_URL) as ws:
                 msg = json.loads(await ws.recv())
+                print(msg)
+                if msg["type"] == "auth_required":
+                    print("Authenticating with websocket service...")
+                    # Auth
+                    await ws.send(json.dumps({
+                        "type": "auth",
+                        "access_token": self.HA_TOKEN,
+                    }))
 
-                if msg["type"] != "auth_ok":
-                    raise RuntimeError("Authentication failed!")
+                    msg = json.loads(await ws.recv())
 
-                # Sub to custom event
-                await ws.send(json.dumps({
-                    "id": 1,
-                    "type": "subscribe_events",
-                    "event_type": const.WS_EVENT_HANDLE
-                }))
+                    if msg["type"] != "auth_ok":
+                        raise RuntimeError("Authentication failed!")
 
-                result = json.loads(await ws.recv())
+                    # Sub to custom event
+                    await ws.send(json.dumps({
+                        "id": 1,
+                        "type": "subscribe_events",
+                        "event_type": const.WS_EVENT_HANDLE
+                    }))
 
-                if not result["success"]:
-                    raise RuntimeError("Event subscription failed!")
+                    result = json.loads(await ws.recv())
 
-                # Event loop
-                while True:
-                    event = json.loads(await ws.recv())
+                    if not result["success"]:
+                        raise RuntimeError("Event subscription failed!")
 
-                    if event.get("type") == "event" and event["event"]["event_type"] == const.WS_EVENT_HANDLE:
-                        print(event)
-                        await self.async_ws_poll_ai_input(ws)
+                    # Event loop
+                    while True:
+                        event = json.loads(await ws.recv())
+
+                        if event.get("type") == "event" and event["event"]["event_type"] == const.WS_EVENT_HANDLE:
+                            print(event)
+                            await self.async_ws_poll_ai_input(ws)
+
+        except (OSError, websockets.InvalidURI, websockets.InvalidHandshake) as ex:
+            print(f"Failed to connect to websocket: {ex}")
+
 
     async def async_ws_poll_ai_input(self, ws):
         await ws.send(json.dumps({
