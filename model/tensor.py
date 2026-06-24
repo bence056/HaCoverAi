@@ -62,7 +62,7 @@ def parse_output_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]) -> to
     return tensor
 
 def convert_from_prediction(prediction: torch.Tensor, data_schema: DatasetEntry) -> list[ShutterData]:
-    prediction.flatten()
+    prediction = prediction.flatten()
     if prediction.size(dim=0) == len(data_schema.shutter_data):
         print("Tensor and shutter size match!")
 
