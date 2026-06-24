@@ -61,13 +61,9 @@ class CoverIntelligence:
                     while True:
                         event = json.loads(await ws.recv())
 
-                        print(f"EVENTTT {event}")
-
                         if event.get("type") == "event" and event["event"]["event_type"] == const.WS_EVENT_HANDLE:
                             states = await self.async_ws_poll_ai_input(ws)
                             self.fill_schema_from_states(states)
-                        else:
-                            print(f"OTHER: {event}")
 
 
         except (OSError, websockets.InvalidURI, websockets.InvalidHandshake) as ex:
@@ -82,7 +78,6 @@ class CoverIntelligence:
         self.ws_id += 1
 
         states = json.loads(await ws.recv())
-        print(f"STATE RETURN: {states}")
         return states["result"]
 
 
