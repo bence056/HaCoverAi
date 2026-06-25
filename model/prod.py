@@ -155,6 +155,7 @@ class CoverIntelligence:
         return significant_change
 
     async def async_set_shutter(self, ws: websockets.ClientConnection, data: ShutterData) -> bool:
+        print(f"Setting shutter {data.name} position to {data.position} and tilt to  {data.tilt_position}")
         success = True
         await ws.send(json.dumps({
             "id": self.ws_id,
