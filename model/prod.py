@@ -152,6 +152,7 @@ class CoverIntelligence:
                         tilt_delta = abs(current_state.tilt_position - shutter.tilt_position)
                         if pos_delta >= self.pos_trigger_delta or tilt_delta >= self.tilt_trigger_delta:
                             significant_change.append(shutter)
+                            print(f"Adding significant change: {shutter.entity_id} - DeltaPos: {pos_delta} - DeltaTilt: {tilt_delta}")
         return significant_change
 
     async def async_set_shutter(self, ws: websockets.ClientConnection, data: ShutterData) -> bool:
