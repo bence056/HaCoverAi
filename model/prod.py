@@ -7,6 +7,7 @@ import torch
 import websockets
 
 from db.load_data import DatasetEntry
+from db.shutters import ShutterData
 from model.module import CoverModel, load_cover_model
 from model.tensor import parse_input_tensor, convert_from_prediction
 from util import const
@@ -80,7 +81,9 @@ class CoverIntelligence:
                             states = await self.async_ws_poll_ai_input(ws)
                             self.fill_schema_from_states(states)
                             timestamp = event["event"]["time_fired"]
-                            self.evaluate_model(datetime.datetime.fromisoformat(timestamp))
+                            predicted_shutters = self.evaluate_model(datetime.datetime.fromisoformat(timestamp))
+                            for shutter in predicted_shutters:
+                                await self.async_set_shutter(ws, shutter)
 
 
         except (OSError, websockets.InvalidURI, websockets.InvalidHandshake) as ex:
@@ -130,6 +133,7 @@ class CoverIntelligence:
 
 
     def evaluate_model(self, time: datetime.datetime):
+        significant_change: list[ShutterData] = []
         if self.model.data_schema:
             adjusted = time.replace(tzinfo=datetime.timezone.utc, minute=0, second=0, microsecond=0)
             tensor_parse: dict[datetime.datetime, DatasetEntry] = {adjusted: self.model.data_schema}
@@ -141,3 +145,47 @@ class CoverIntelligence:
                 print(f"Model prediction: {pred}")
                 new_shutters = convert_from_prediction(pred, self.model.data_schema)
                 #data is ready to send back to set value. First check if deltas are big enough to be a significant change.
+                for shutter in new_shutters:
+                    current_state = self.model.data_schema.shutter_data.get(shutter.entity_id)
+                    if current_state is not None:
+                        pos_delta = abs(current_state.position - shutter.position)
+                        tilt_delta = abs(current_state.tilt_position - shutter.tilt_position)
+                        if pos_delta >= self.pos_trigger_delta or tilt_delta >= self.tilt_trigger_delta:
+                            significant_change.append(shutter)
+        return significant_change
+
+    async def async_set_shutter(self, ws: websockets.ClientConnection, data: ShutterData) -> bool:
+        success = True
+        await ws.send(json.dumps({
+            "id": self.ws_id,
+            "type": "call_service",
+            "domain": "cover",
+            "service": "set_cover_position",
+            "service_data": {
+                "position": data.position,
+            },
+            "target": {
+                "entity_id": data.entity_id
+            }
+
+        }))
+        self.ws_id += 1
+        result = json.loads(await ws.recv())
+        success &= result["success"]
+        await ws.send(json.dumps({
+            "id": self.ws_id,
+            "type": "call_service",
+            "domain": "cover",
+            "service": "set_cover_tilt_position",
+            "service_data": {
+                "tilt_position": data.position,
+            },
+            "target": {
+                "entity_id": data.entity_id
+            }
+
+        }))
+        self.ws_id += 1
+        result = json.loads(await ws.recv())
+        success &= result["success"]
+        return success

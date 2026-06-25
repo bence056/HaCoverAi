@@ -6,8 +6,8 @@ homeassistant_api: true
 
 options:
   custom_trigger_event: "run_model_eval"
-  position_trigger_delta: 20
-  tilt_trigger_delta: 10
+  position_trigger_delta: 10
+  tilt_trigger_delta: 5
 
 schema:
   custom_trigger_event: str
