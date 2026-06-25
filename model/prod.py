@@ -39,8 +39,8 @@ class CoverIntelligence:
             self.ws_event_string = self.options["custom_trigger_event"]
             if self.ws_event_string == "":
                 self.ws_event_string = const.WS_EVENT_HANDLE
-            self.pos_trigger_delta =  min(0, max(int(self.options["position_trigger_delta"]), 100))
-            self.tilt_trigger_delta =  min(0, max(int(self.options["tilt_trigger_delta"]), 100))
+            self.pos_trigger_delta =  min(100, max(int(self.options["position_trigger_delta"]), 0))
+            self.tilt_trigger_delta =  min(100, max(int(self.options["tilt_trigger_delta"]), 0))
         self.model = load_cover_model(const.MODEL_SAVE_PATH)
         self.model.eval()
 
