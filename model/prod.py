@@ -82,10 +82,9 @@ class CoverIntelligence:
         self.fill_schema_from_states(states)
         timestamp = event_data["event"]["time_fired"]
         predicted_shutters = self.evaluate_model(datetime.datetime.fromisoformat(timestamp))
-        # for shutter in predicted_shutters:
-        #     await self.async_set_shutter(ws, shutter)
-        tmp_data = ShutterData("cover.roller_shutter_3_9", "Bedroom TMP", 0, 80)
-        await self.async_set_shutter(ws_client, tmp_data)
+        for shutter in predicted_shutters:
+            await self.async_set_shutter(ws_client, shutter)
+
 
     async def async_ws_poll_ai_input(self, ws):
         states = await ws.request({
@@ -138,6 +137,7 @@ class CoverIntelligence:
                 pred = self.model(in_tensor)
                 print(f"Model prediction: {pred}")
                 new_shutters = convert_from_prediction(pred, self.model.data_schema)
+                convert_to_tilt_only(new_shutters)
                 #data is ready to send back to set value. First check if deltas are big enough to be a significant change.
                 for shutter in new_shutters:
                     current_state = self.model.data_schema.shutter_data.get(shutter.entity_id)
@@ -152,7 +152,6 @@ class CoverIntelligence:
 
     async def async_set_shutter(self, ws: WSClient, data: ShutterData) -> bool:
         print(f"Setting shutter {data.name} position to {data.position} and tilt to  {data.tilt_position}")
-        success = True
 
         await ws.send(
             {
@@ -185,3 +184,13 @@ class CoverIntelligence:
         print("Sent tilt position")
 
         return True
+
+def convert_to_tilt_only(shutters: list[ShutterData]):
+    for shutter in shutters:
+        if shutter.position >= 50:
+            # if position is closer to open, open fully and tilt full open
+            shutter.position = 100
+            shutter.tilt_position = 100
+        else:
+            # close the shutter fully, keep tilt data as is.
+            shutter.position = 0
