@@ -185,7 +185,7 @@ class CoverIntelligence:
                 "domain": "cover",
                 "service": "set_cover_tilt_position",
                 "service_data": {
-                    "tilt_position": data.position,
+                    "tilt_position": data.tilt_position,
                 },
                 "target": {
                     "entity_id": data.entity_id
