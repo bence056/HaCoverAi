@@ -167,6 +167,7 @@ class CoverIntelligence:
                     }
                 }
             )
+            print("Sent normal position")
 
         await ws.subscribe_ha_trigger(
             {
@@ -176,6 +177,7 @@ class CoverIntelligence:
             },
             cover_state_update
         )
+        print("Subscribed")
 
         await ws.send(
             {
@@ -191,5 +193,6 @@ class CoverIntelligence:
 
             }
         )
+        print("Sent tilt position")
 
         return True
