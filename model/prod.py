@@ -149,52 +149,6 @@ class CoverIntelligence:
                             print(f"Adding significant change: {shutter.entity_id} - DeltaPos: {pos_delta} - DeltaTilt: {tilt_delta}")
         return significant_change
 
-    async def async_update_shutter(self, ws: WSClient, old_data: ShutterData, new_data: ShutterData):
-
-        async def tilt_update_callback(ws_local: WSClient, event_data: dict):
-            await ws.send(
-                {
-                    "type": "call_service",
-                    "domain": "cover",
-                    "service": "set_cover_position",
-                    "service_data": {
-                        "position": new_data.position,
-                    },
-                    "target": {
-                        "entity_id": new_data.entity_id
-                    }
-                }
-            )
-
-
-        if new_data.tilt_position != old_data.tilt_position:
-            # Update tilt position and subscribe.
-            await ws.subscribe_ha_trigger(
-                {
-                    "platform": "state",
-                    "entity_id": new_data.entity_id,
-                    "attribute": "current_tilt_position"
-                },
-                tilt_update_callback
-            )
-            await ws.send(
-                {
-                    "type": "call_service",
-                    "domain": "cover",
-                    "service": "set_cover_tilt_position",
-                    "service_data": {
-                        "tilt_position": new_data.tilt_position,
-                    },
-                    "target": {
-                        "entity_id": new_data.entity_id
-                    }
-
-                }
-            )
-        else:
-            # Just update the cover position
-            await tilt_update_callback(ws, {})
-
 
     async def async_set_shutter(self, ws: WSClient, data: ShutterData) -> bool:
         print(f"Setting shutter {data.name} position to {data.position} and tilt to  {data.tilt_position}")
