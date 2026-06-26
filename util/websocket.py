@@ -74,8 +74,8 @@ class WSClient:
             "trigger": trigger,
         }
 
-        def handler(event):
-            callback(self, event)
+        async def handler(event):
+            await callback(self, event)
 
         self.on(f"trigger_{msg["id"]}", handler)
         await self.send(msg)
