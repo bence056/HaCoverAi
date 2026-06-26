@@ -109,7 +109,8 @@ class WSClient:
     async def _reader(self):
         while True:
             msg = json.loads(await self.ws.recv())
-            print(self._pending)
+            if len(self._pending) > 0:
+                print(self._pending)
             if msg["id"] in self._pending:
                 fut = self._pending.pop(msg["id"])
                 if not fut.done():
@@ -119,6 +120,7 @@ class WSClient:
             if msg.get("type") == "event":
                 for sub in self._subs[msg["event"]["event_type"]]:
                     asyncio.create_task(sub(msg))
+                continue
 
             if msg.get("type") == "trigger":
                 event_id = f"trigger_{msg["id"]}"
