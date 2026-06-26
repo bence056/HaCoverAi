@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import json
 import os
@@ -67,7 +68,8 @@ class CoverIntelligence:
                     await custom_ws.subscribe_ha_event(self.ws_event_string, self.handle_ai_trigger)
 
                     # Event loop
-
+                    while True:
+                        await asyncio.sleep(1)
 
         except (OSError, websockets.InvalidURI, websockets.InvalidHandshake) as ex:
             print(f"Failed to connect to websocket: {ex}")
