@@ -31,6 +31,16 @@ class WSClient:
         for t in self._tasks:
             t.cancel()
 
+    async def run(self):
+        await asyncio.gather(*self._tasks, return_exceptions=True)
+
+    async def __aenter__(self):
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        await self.close()
+
 
     async def send(self, msg: dict):
         if "id" not in msg:

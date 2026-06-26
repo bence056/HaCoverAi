@@ -64,13 +64,10 @@ class CoverIntelligence:
                         raise RuntimeError("Authentication failed!")
 
                     # Sub to custom event
-                    custom_ws: WSClient = WSClient(ws)
-                    await custom_ws.connect()
-                    await custom_ws.subscribe_ha_event(self.ws_event_string, self.handle_ai_trigger)
-
-                    # Event loop
-                    while True:
-                        await asyncio.sleep(1)
+                    async with WSClient(ws) as custom_ws:
+                        await custom_ws.connect()
+                        await custom_ws.subscribe_ha_event(self.ws_event_string, self.handle_ai_trigger)
+                        await custom_ws.run()
 
         except (OSError, websockets.InvalidURI, websockets.InvalidHandshake) as ex:
             print(f"Failed to connect to websocket: {ex}")
