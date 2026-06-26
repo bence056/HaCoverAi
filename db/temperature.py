@@ -1,5 +1,4 @@
 from influxdb_client import InfluxDBClient
-
 import util.const as const
 
 

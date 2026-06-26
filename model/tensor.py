@@ -63,8 +63,6 @@ def parse_output_tensor(in_dataset: dict[datetime.datetime, DatasetEntry]) -> to
 
 def convert_from_prediction(prediction: torch.Tensor, data_schema: DatasetEntry) -> list[ShutterData]:
     prediction = prediction.flatten().clamp(min=0, max=1)
-    if prediction.size(dim=0) == len(data_schema.shutter_data):
-        print("Tensor and shutter size match!")
 
     pred_shutters: list[ShutterData] = []
     tensor_index = 0
@@ -79,8 +77,6 @@ def convert_from_prediction(prediction: torch.Tensor, data_schema: DatasetEntry)
         tensor_index += 2
 
     print("Output shutter prediction:")
-    for s in pred_shutters:
-        print(f"id: {s.entity_id} - name: {s.name} --- pos: {s.position} - tilt: {s.tilt_position}")
 
     return pred_shutters
 

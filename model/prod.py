@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import json
 import os
@@ -74,7 +73,6 @@ class CoverIntelligence:
 
 
     async def handle_ai_trigger(self, ws_client: WSClient, event_data):
-        print("Event Received!!!")
         states = await self.async_ws_poll_ai_input(ws_client)
         self.fill_schema_from_states(states)
         timestamp = event_data["event"]["time_fired"]
@@ -87,7 +85,6 @@ class CoverIntelligence:
         states = await ws.request({
             "type": "get_states"
         })
-        print("Future returned")
         return states["result"]
 
 
@@ -143,7 +140,6 @@ class CoverIntelligence:
                         tilt_delta = abs(current_state.tilt_position - shutter.tilt_position)
                         if pos_delta >= self.pos_trigger_delta or tilt_delta >= self.tilt_trigger_delta:
                             significant_change.append(shutter)
-                            print(f"Adding significant change: {shutter.entity_id} - DeltaPos: {pos_delta} - DeltaTilt: {tilt_delta}")
         return significant_change
 
 
@@ -162,7 +158,6 @@ class CoverIntelligence:
                 }
             }
         )
-        print("Sent normal position")
         await ws.send(
             {
                 "type": "call_service",
@@ -177,7 +172,6 @@ class CoverIntelligence:
 
             }
         )
-        print("Sent tilt position")
 
         return True
 

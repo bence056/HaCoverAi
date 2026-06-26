@@ -4,9 +4,6 @@ import itertools
 import json
 from collections import defaultdict
 
-import websockets
-from websockets import InvalidProxy, InvalidURI, InvalidHandshake
-
 
 class WSClient:
 
@@ -54,7 +51,6 @@ class WSClient:
         fut = asyncio.get_running_loop().create_future()
         self._pending[msg_id] = fut
         await self.send(msg)
-        print("Waiting for request future")
         return await asyncio.wait_for(fut, timeout=timeout)
 
 
@@ -115,17 +111,11 @@ class WSClient:
     async def _writer(self):
         while True:
             msg = await self.outgoing.get()
-            if msg["type"] == "call_service":
-                print(msg)
             await self.ws.send(json.dumps(msg))
 
     async def _reader(self):
         while True:
             msg = json.loads(await self.ws.recv())
-            print(msg)
-            if len(self._pending) > 0:
-                print(self._pending)
-                print(msg["id"])
             if msg["id"] in self._pending:
                 fut = self._pending.pop(msg["id"])
                 if not fut.done():

@@ -1,8 +1,6 @@
 from pathlib import Path
 
 import torch
-from torch.distributed.checkpoint import state_dict
-
 import util.const as const
 from model.module import CoverModel, load_cover_model
 

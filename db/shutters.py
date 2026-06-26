@@ -1,8 +1,4 @@
-import datetime
-
 from influxdb_client import InfluxDBClient
-from influxdb_client.client.query_api import QueryOptions
-
 import util.const as const
 
 
