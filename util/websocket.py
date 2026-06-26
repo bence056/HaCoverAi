@@ -60,8 +60,8 @@ class WSClient:
             "event_type": event_name,
         }
 
-        def handler(event):
-            callback(self, event)
+        async def handler(event):
+            await callback(self, event)
 
         self.on(event_name, handler)
         await self.send(msg)
