@@ -149,7 +149,6 @@ class CoverIntelligence:
 
     async def async_set_shutter(self, ws: WSClient, data: ShutterData) -> bool:
         print(f"Setting shutter {data.name} position to {data.position} and tilt to  {data.tilt_position}")
-        return True
         await ws.send(
             {
                 "type": "call_service",
