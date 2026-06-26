@@ -65,6 +65,7 @@ class CoverIntelligence:
 
                     # Sub to custom event
                     custom_ws: WSClient = WSClient(ws)
+                    await custom_ws.connect()
                     await custom_ws.subscribe_ha_event(self.ws_event_string, self.handle_ai_trigger)
 
                     # Event loop
