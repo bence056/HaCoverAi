@@ -112,6 +112,7 @@ class WSClient:
     async def _reader(self):
         while True:
             msg = json.loads(await self.ws.recv())
+            print(msg)
             if len(self._pending) > 0:
                 print(self._pending)
                 print(msg["id"])
