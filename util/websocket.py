@@ -105,7 +105,7 @@ class WSClient:
     async def _writer(self):
         while True:
             msg = await self.outgoing.get()
-            if msg["call_service"]:
+            if msg["type"] == "call_service":
                 print(msg)
             await self.ws.send(json.dumps(msg))
 
