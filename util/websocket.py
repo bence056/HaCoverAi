@@ -33,7 +33,8 @@ class WSClient:
 
 
     async def send(self, msg: dict):
-        msg["id"] = next(self._idc)
+        if "id" not in msg:
+            msg["id"] = next(self._idc)
         await self.outgoing.put(msg)
         return self._idc
 
