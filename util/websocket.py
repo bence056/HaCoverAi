@@ -123,11 +123,13 @@ class WSClient:
                 continue
 
             if msg.get("type") == "event":
-                for sub in self._subs[msg["event"]["event_type"]]:
-                    asyncio.create_task(sub(msg))
-                continue
-
-            if msg.get("type") == "trigger":
-                event_id = f"trigger_{msg["id"]}"
-                for sub in self._subs[event_id]:
-                    asyncio.create_task(sub(msg))
+                if "event_type" in msg["event"]:
+                    for sub in self._subs[msg["event"]["event_type"]]:
+                        asyncio.create_task(sub(msg))
+                    continue
+                # check for trigger subscriptions as well
+                if "variables" in msg["event"]:
+                    event_id = f"trigger_{msg["id"]}"
+                    for sub in self._subs[event_id]:
+                        asyncio.create_task(sub(msg))
+                    continue
