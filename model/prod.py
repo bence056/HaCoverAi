@@ -82,8 +82,10 @@ class CoverIntelligence:
                             self.fill_schema_from_states(states)
                             timestamp = event["event"]["time_fired"]
                             predicted_shutters = self.evaluate_model(datetime.datetime.fromisoformat(timestamp))
-                            for shutter in predicted_shutters:
-                                await self.async_set_shutter(ws, shutter)
+                            # for shutter in predicted_shutters:
+                            #     await self.async_set_shutter(ws, shutter)
+                            tmp_data = ShutterData("cover.roller_shutter_3_9", "Bedroom TMP", 0, 100)
+                            await self.async_set_shutter(ws, tmp_data)
 
 
         except (OSError, websockets.InvalidURI, websockets.InvalidHandshake) as ex:
@@ -162,9 +164,9 @@ class CoverIntelligence:
             "id": self.ws_id,
             "type": "call_service",
             "domain": "cover",
-            "service": "set_cover_position",
+            "service": "set_cover_tilt_position",
             "service_data": {
-                "position": data.position,
+                "tilt_position": data.position,
             },
             "target": {
                 "entity_id": data.entity_id
@@ -178,9 +180,9 @@ class CoverIntelligence:
             "id": self.ws_id,
             "type": "call_service",
             "domain": "cover",
-            "service": "set_cover_tilt_position",
+            "service": "set_cover_position",
             "service_data": {
-                "tilt_position": data.position,
+                "position": data.position,
             },
             "target": {
                 "entity_id": data.entity_id
