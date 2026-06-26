@@ -43,6 +43,7 @@ class WSClient:
         fut = asyncio.get_running_loop().create_future()
         self._pending[msg_id] = fut
         await self.send(msg)
+        print("Waiting for request future")
         return await asyncio.wait_for(fut, timeout=timeout)
 
 
@@ -108,7 +109,6 @@ class WSClient:
     async def _reader(self):
         while True:
             msg = json.loads(await self.ws.recv())
-            print(f"PRINTING MESSAGE ---- {msg}")
             if msg["id"] in self._pending:
                 fut = self._pending.pop(msg["id"])
                 if not fut.done():

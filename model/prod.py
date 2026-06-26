@@ -91,6 +91,7 @@ class CoverIntelligence:
         states = await ws.request({
             "type": "get_states"
         })
+        print("Future returned")
         return states["result"]
 
 
