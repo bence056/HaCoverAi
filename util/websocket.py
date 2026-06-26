@@ -111,6 +111,7 @@ class WSClient:
             msg = json.loads(await self.ws.recv())
             if len(self._pending) > 0:
                 print(self._pending)
+                print(msg["id"])
             if msg["id"] in self._pending:
                 fut = self._pending.pop(msg["id"])
                 if not fut.done():
