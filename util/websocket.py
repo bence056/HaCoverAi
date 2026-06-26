@@ -61,7 +61,7 @@ class WSClient:
         }
 
         def handler(event):
-            callback(event)
+            callback(self, event)
 
         self.on(event_name, handler)
         await self.send(msg)
@@ -75,7 +75,7 @@ class WSClient:
         }
 
         def handler(event):
-            callback(event)
+            callback(self, event)
 
         self.on(f"trigger_{msg["id"]}", handler)
         await self.send(msg)

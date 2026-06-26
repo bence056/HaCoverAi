@@ -11,6 +11,7 @@ from db.shutters import ShutterData
 from model.module import CoverModel, load_cover_model
 from model.tensor import parse_input_tensor, convert_from_prediction
 from util import const
+from util.websocket import WSClient
 
 
 async def async_prod_main():
@@ -62,35 +63,26 @@ class CoverIntelligence:
                         raise RuntimeError("Authentication failed!")
 
                     # Sub to custom event
-                    await ws.send(json.dumps({
-                        "id": self.ws_id,
-                        "type": "subscribe_events",
-                        "event_type": self.ws_event_string
-                    }))
-                    self.ws_id += 1
-                    result = json.loads(await ws.recv())
-
-                    if not result["success"]:
-                        raise RuntimeError("Event subscription failed!")
+                    custom_ws: WSClient = WSClient(ws)
+                    await custom_ws.subscribe_ha_event(self.ws_event_string, self.handle_ai_trigger)
 
                     # Event loop
-                    while True:
-                        event = json.loads(await ws.recv())
-
-                        if event.get("type") == "event" and event["event"]["event_type"] == self.ws_event_string:
-                            states = await self.async_ws_poll_ai_input(ws)
-                            self.fill_schema_from_states(states)
-                            timestamp = event["event"]["time_fired"]
-                            predicted_shutters = self.evaluate_model(datetime.datetime.fromisoformat(timestamp))
-                            # for shutter in predicted_shutters:
-                            #     await self.async_set_shutter(ws, shutter)
-                            tmp_data = ShutterData("cover.roller_shutter_3_9", "Bedroom TMP", 0, 100)
-                            await self.async_set_shutter(ws, tmp_data)
 
 
         except (OSError, websockets.InvalidURI, websockets.InvalidHandshake) as ex:
             print(f"Failed to connect to websocket: {ex}")
 
+
+    async def handle_ai_trigger(self, ws_client: WSClient, event_data):
+        print("Event Received!!!")
+        states = await self.async_ws_poll_ai_input(ws_client.ws)
+        self.fill_schema_from_states(states)
+        timestamp = event_data["event"]["time_fired"]
+        predicted_shutters = self.evaluate_model(datetime.datetime.fromisoformat(timestamp))
+        # for shutter in predicted_shutters:
+        #     await self.async_set_shutter(ws, shutter)
+        tmp_data = ShutterData("cover.roller_shutter_3_9", "Bedroom TMP", 0, 100)
+        await self.async_set_shutter(ws_client.ws, tmp_data)
 
     async def async_ws_poll_ai_input(self, ws):
         await ws.send(json.dumps({
