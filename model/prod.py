@@ -78,23 +78,19 @@ class CoverIntelligence:
 
     async def handle_ai_trigger(self, ws_client: WSClient, event_data):
         print("Event Received!!!")
-        states = await self.async_ws_poll_ai_input(ws_client.ws)
+        states = await self.async_ws_poll_ai_input(ws_client)
         self.fill_schema_from_states(states)
         timestamp = event_data["event"]["time_fired"]
         predicted_shutters = self.evaluate_model(datetime.datetime.fromisoformat(timestamp))
         # for shutter in predicted_shutters:
         #     await self.async_set_shutter(ws, shutter)
         tmp_data = ShutterData("cover.roller_shutter_3_9", "Bedroom TMP", 0, 100)
-        await self.async_set_shutter(ws_client.ws, tmp_data)
+        await self.async_set_shutter(ws_client, tmp_data)
 
     async def async_ws_poll_ai_input(self, ws):
-        await ws.send(json.dumps({
-            "id": self.ws_id,
+        states = await ws.request({
             "type": "get_states"
-        }))
-        self.ws_id += 1
-
-        states = json.loads(await ws.recv())
+        })
         return states["result"]
 
 
@@ -152,39 +148,47 @@ class CoverIntelligence:
                             print(f"Adding significant change: {shutter.entity_id} - DeltaPos: {pos_delta} - DeltaTilt: {tilt_delta}")
         return significant_change
 
-    async def async_set_shutter(self, ws: websockets.ClientConnection, data: ShutterData) -> bool:
+    async def async_set_shutter(self, ws: WSClient, data: ShutterData) -> bool:
         print(f"Setting shutter {data.name} position to {data.position} and tilt to  {data.tilt_position}")
         success = True
-        await ws.send(json.dumps({
-            "id": self.ws_id,
-            "type": "call_service",
-            "domain": "cover",
-            "service": "set_cover_tilt_position",
-            "service_data": {
-                "tilt_position": data.position,
-            },
-            "target": {
-                "entity_id": data.entity_id
-            }
 
-        }))
-        self.ws_id += 1
-        result = json.loads(await ws.recv())
-        success &= result["success"]
-        await ws.send(json.dumps({
-            "id": self.ws_id,
-            "type": "call_service",
-            "domain": "cover",
-            "service": "set_cover_position",
-            "service_data": {
-                "position": data.position,
-            },
-            "target": {
-                "entity_id": data.entity_id
-            }
+        async def cover_state_update(ws_local, event_data):
+            await ws.send(
+                {
+                    "type": "call_service",
+                    "domain": "cover",
+                    "service": "set_cover_position",
+                    "service_data": {
+                        "position": data.position,
+                    },
+                    "target": {
+                        "entity_id": data.entity_id
+                    }
+                }
+            )
 
-        }))
-        self.ws_id += 1
-        result = json.loads(await ws.recv())
-        success &= result["success"]
-        return success
+        await ws.subscribe_ha_trigger(
+            {
+                "platform": "state",
+                "entity_id": data.entity_id,
+                "attribute": "current_tilt_position"
+            },
+            cover_state_update
+        )
+
+        await ws.send(
+            {
+                "type": "call_service",
+                "domain": "cover",
+                "service": "set_cover_tilt_position",
+                "service_data": {
+                    "tilt_position": data.position,
+                },
+                "target": {
+                    "entity_id": data.entity_id
+                }
+
+            }
+        )
+
+        return True
