@@ -84,7 +84,7 @@ class CoverIntelligence:
         predicted_shutters = self.evaluate_model(datetime.datetime.fromisoformat(timestamp))
         # for shutter in predicted_shutters:
         #     await self.async_set_shutter(ws, shutter)
-        tmp_data = ShutterData("cover.roller_shutter_3_9", "Bedroom TMP", 0, 100)
+        tmp_data = ShutterData("cover.roller_shutter_3_9", "Bedroom TMP", 0, 80)
         await self.async_set_shutter(ws_client, tmp_data)
 
     async def async_ws_poll_ai_input(self, ws):
@@ -149,36 +149,71 @@ class CoverIntelligence:
                             print(f"Adding significant change: {shutter.entity_id} - DeltaPos: {pos_delta} - DeltaTilt: {tilt_delta}")
         return significant_change
 
-    async def async_set_shutter(self, ws: WSClient, data: ShutterData) -> bool:
-        print(f"Setting shutter {data.name} position to {data.position} and tilt to  {data.tilt_position}")
-        success = True
+    async def async_update_shutter(self, ws: WSClient, old_data: ShutterData, new_data: ShutterData):
 
-        async def cover_state_update(ws_local, event_data):
+        async def tilt_update_callback(ws_local: WSClient, event_data: dict):
             await ws.send(
                 {
                     "type": "call_service",
                     "domain": "cover",
                     "service": "set_cover_position",
                     "service_data": {
-                        "position": data.position,
+                        "position": new_data.position,
                     },
                     "target": {
-                        "entity_id": data.entity_id
+                        "entity_id": new_data.entity_id
                     }
                 }
             )
-            print("Sent normal position")
 
-        await ws.subscribe_ha_trigger(
+
+        if new_data.tilt_position != old_data.tilt_position:
+            # Update tilt position and subscribe.
+            await ws.subscribe_ha_trigger(
+                {
+                    "platform": "state",
+                    "entity_id": new_data.entity_id,
+                    "attribute": "current_tilt_position"
+                },
+                tilt_update_callback
+            )
+            await ws.send(
+                {
+                    "type": "call_service",
+                    "domain": "cover",
+                    "service": "set_cover_tilt_position",
+                    "service_data": {
+                        "tilt_position": new_data.tilt_position,
+                    },
+                    "target": {
+                        "entity_id": new_data.entity_id
+                    }
+
+                }
+            )
+        else:
+            # Just update the cover position
+            await tilt_update_callback(ws, {})
+
+
+    async def async_set_shutter(self, ws: WSClient, data: ShutterData) -> bool:
+        print(f"Setting shutter {data.name} position to {data.position} and tilt to  {data.tilt_position}")
+        success = True
+
+        await ws.send(
             {
-                "platform": "state",
-                "entity_id": data.entity_id,
-                "attribute": "current_tilt_position"
-            },
-            cover_state_update
+                "type": "call_service",
+                "domain": "cover",
+                "service": "set_cover_position",
+                "service_data": {
+                    "position": data.position,
+                },
+                "target": {
+                    "entity_id": data.entity_id
+                }
+            }
         )
-        print("Subscribed")
-
+        print("Sent normal position")
         await ws.send(
             {
                 "type": "call_service",
