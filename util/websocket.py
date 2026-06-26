@@ -109,9 +109,9 @@ class WSClient:
     async def _reader(self):
         while True:
             msg = json.loads(await self.ws.recv())
+            print(self._pending)
             if msg["id"] in self._pending:
                 fut = self._pending.pop(msg["id"])
-                print(self._pending)
                 if not fut.done():
                     fut.set_result(msg)
                 continue
