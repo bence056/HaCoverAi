@@ -76,8 +76,6 @@ def convert_from_prediction(prediction: torch.Tensor, data_schema: DatasetEntry)
         pred_shutters.append(shutter_cpy)
         tensor_index += 2
 
-    print("Output shutter prediction:")
-
     return pred_shutters
 
 
