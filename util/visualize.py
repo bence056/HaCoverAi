@@ -18,7 +18,6 @@ class ModelDisplay:
     selected_entry: DatasetEntry
     selected_datetime: datetime
     mutable_entry: DatasetEntry = None
-    mutable_datetime: datetime = None
     eval_mode: bool = False
     show_db_results: bool = False
     model: CoverModel
@@ -49,6 +48,7 @@ class ModelDisplay:
         self.selected_entry = list(self.data_dict.values())[self.selected_entry_index]
         self.selected_datetime = list(self.data_dict.keys())[self.selected_entry_index]
         #set the session state to the values we picked.
+        print(f"ERROR TESTING {self.selected_datetime}")
         st.session_state.dtpicker = self.selected_datetime
         st.session_state.elevation = self.selected_entry.sun_data.elevation
         st.session_state.azimuth = self.selected_entry.sun_data.azimuth
@@ -100,12 +100,11 @@ class ModelDisplay:
         if self.eval_mode:
             self.set_show_db_results(False)
             #we need to deep copy the object for modification.
-            self.mutable_datetime = datetime.now()
-            self.selected_datetime = self.mutable_datetime
             self.mutable_entry = copy.deepcopy(self.selected_entry)
             self.selected_entry = self.mutable_entry
         else:
             del self.mutable_entry
+            self.pick_entry(self.selected_entry_index)
 
     def toggle_db_results(self):
         show = st.session_state["db_results"]
@@ -127,7 +126,7 @@ class ModelDisplay:
 
     def custom_datetime(self):
         self.set_eval_mode(True)
-        self.mutable_datetime = st.session_state.dtpicker
+        self.selected_datetime = st.session_state.dtpicker
         self.evaluate_model_results()
 
     def custom_sun_elev(self):
@@ -188,7 +187,8 @@ main_container = st.container(
 )
 
 with control_container:
-    st.write(f"Entry #{get_model_display().selected_entry_index}")
+    if not get_model_display().eval_mode:
+        st.write(f"Entry #{get_model_display().selected_entry_index}")
     st.toggle(
         label="Eval Mode",
         on_change=get_model_display().toggle_eval_mode,
@@ -206,6 +206,7 @@ col1, col2 = st.columns(2, border=True)
 with col1:
     st.subheader("Date&Time")
     st.datetime_input(label="Date&Time", key="dtpicker")
+    st.button(label="Set Date", key="date_set", on_click=get_model_display().custom_datetime)
     st.subheader("Sun")
     st.slider("Elevation", -90.0, 90.0, step=0.5, key="elevation", on_change=get_model_display().custom_sun_elev)
     st.slider("Azimuth", 0.0, 359.99, step=0.5, key="azimuth", on_change=get_model_display().custom_sun_azimuth)
