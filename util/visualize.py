@@ -54,6 +54,7 @@ class ModelDisplay:
         st.session_state.azimuth = self.selected_entry.sun_data.azimuth
         st.session_state.temperature = self.selected_entry.weather_data.temperature
         st.session_state.cc = self.selected_entry.weather_data.cloud_coverage
+        st.session_state["weather-state"] = self.selected_entry.weather_data.state_string
         for key,is_home in self.selected_entry.person_data.person_states.items():
             st.session_state[key] = is_home
         for val in self.selected_entry.temperature_data.values():
@@ -214,6 +215,7 @@ with col1:
     st.subheader("Weather")
     st.slider("Temperature", -80.0, 80.0, step=0.5, key="temperature", on_change=get_model_display().custom_weather_temp)
     st.slider("Cloud Coverage", 0.0, 100.0, step=1.0, key="cc", on_change=get_model_display().custom_weather_cc)
+    st.selectbox(label="Weather State", options=const.WEATHER_STATES, key="weather-state")
 
     st.subheader("Person Information")
     st.checkbox("Csaba Home", key="person.csaba_varga", on_change=get_model_display().custom_person_info, args=("person.csaba_varga",))

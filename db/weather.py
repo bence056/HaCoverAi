@@ -1,3 +1,5 @@
+from typing import Literal
+
 from influxdb_client import InfluxDBClient
 import util.const as const
 
@@ -38,9 +40,9 @@ class WeatherData:
     name: str
     temperature: float
     cloud_coverage: float
-    state_string: str
+    state_string: const.WEATHER_STATES
 
-    def __init__(self, entity_id: str, name: str, temperature: float, cloud_coverage: float, state_string: str):
+    def __init__(self, entity_id: str, name: str, temperature: float, cloud_coverage: float, state_string: Literal["clear-night", "cloudy", "fog", "hail", "lightning", "lightning-rainy", "partlycloudy", "pouring", "rainy", "snowy", "snowy-rainy", "sunny", "windy", "windy-variant", "exceptional"]):
         self.entity_id = entity_id
         self.name = name
         self.temperature = temperature

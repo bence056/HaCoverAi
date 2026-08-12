@@ -1,3 +1,5 @@
+from typing import Literal
+
 INFLUXDB_TOKEN="-s7HV37I42bPEi_M-swe9ubk5NyNbbKb3uGwgMojnN03EP2vR_LLmnH02AhKPgYlIa1kRQ70jPiYyQdFPlKQqA=="
 ORG="vargahome"
 URL="http://influx.varga-home.net"
@@ -11,3 +13,5 @@ LEARN_RATE = 1e-3
 TRAIN_TEST_SPLIT = 0.9
 
 WS_EVENT_HANDLE = "run_model_eval"
+
+WEATHER_STATES = ["clear-night", "cloudy", "fog", "hail", "lightning", "lightning-rainy", "partlycloudy", "pouring", "rainy", "snowy", "snowy-rainy", "sunny", "windy", "windy-variant", "exceptional"]
