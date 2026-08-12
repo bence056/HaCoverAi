@@ -18,13 +18,6 @@ def make_layers(in_features: int, out_features: int) -> torch.nn.Module:
     )
 
 
-def load_cover_model(path: str) -> CoverModel:
-    torch.serialization.add_safe_globals([DatasetEntry, ShutterData, TemperatureData, SunData, WeatherData, PersonData])
-    save_data = torch.load(path)
-    model = CoverModel(save_data["in_features"], save_data["out_features"], save_data["data_schema"])
-    model.load_state_dict(save_data["state_dict"])
-    return model
-
 
 class CoverModel(torch.nn.Module):
 
@@ -49,3 +42,10 @@ class CoverModel(torch.nn.Module):
         torch.save(save_data, path)
         print(f"Saved model to {path}")
 
+
+def load_cover_model(path: str) -> CoverModel:
+    torch.serialization.add_safe_globals([DatasetEntry, ShutterData, TemperatureData, SunData, WeatherData, PersonData])
+    save_data = torch.load(path)
+    model = CoverModel(save_data["in_features"], save_data["out_features"], save_data["data_schema"])
+    model.load_state_dict(save_data["state_dict"])
+    return model
